@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "functions": {
+    "api/index.go": {
+      "runtime": "vercel-go@0.0.0"
+    }
+  },
+  "routes": [
+    {
+      "src": "/",
+      "dest": "/api/index.go"
+    },
+    {
+      "src": "/api/health",
+      "dest": "/api/index.go"
+    }
+  ]
+}
