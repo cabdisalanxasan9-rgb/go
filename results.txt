@@ -1,0 +1,2 @@
+Port 22 OPEN | Banner: 
+Port 80 OPEN | Banner: 

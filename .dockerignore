@@ -1,0 +1,9 @@
+.git
+.gitignore
+.vscode
+*.md
+*.txt
+*.json
+result.json
+results.txt
+defensekit/

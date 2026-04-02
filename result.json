@@ -1,0 +1,45 @@
+{
+  "warning": "Educational and defensive use only. Do not scan systems without explicit authorization.",
+  "target": "scanme.nmap.org",
+  "http": {
+    "url": "https://scanme.nmap.org",
+    "status_code": 0,
+    "response_time": 1007173400,
+    "error": "Get \"https://scanme.nmap.org\": context deadline exceeded (Client.Timeout exceeded while awaiting headers)"
+  },
+  "ports": [
+    {
+      "port": 22,
+      "open": true,
+      "banner": "SSH-2.0-OpenSSH_6.6.1p1 Ubuntu-2ubuntu2.13"
+    },
+    {
+      "port": 80,
+      "open": true,
+      "banner": "HTTP/1.1 200 OK"
+    }
+  ],
+  "dns": {
+    "host": "scanme.nmap.org",
+    "ips": [
+      "45.33.32.156",
+      "2600:3c01::f03c:91ff:fe18:bb2f"
+    ],
+    "cname": "scanme.nmap.org."
+  },
+  "ssl": {
+    "host": "scanme.nmap.org",
+    "port": 443,
+    "not_before": "0001-01-01T00:00:00Z",
+    "not_after": "0001-01-01T00:00:00Z",
+    "valid_now": false,
+    "error": "dial tcp 45.33.32.156:443: connectex: No connection could be made because the target machine actively refused it."
+  },
+  "latency": {
+    "host": "scanme.nmap.org",
+    "port": 443,
+    "latency": 0,
+    "error": "dial tcp 45.33.32.156:443: i/o timeout"
+  },
+  "generated_at_unix": 1772450897
+}

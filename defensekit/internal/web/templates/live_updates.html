@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{{.Title}}</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: #0a1020;
+      color: #e2e8f0;
+    }
+    .card {
+      max-width: 1100px;
+      margin: 0 auto;
+      background: #111a2b;
+      border: 1px solid #273654;
+      border-radius: 12px;
+      padding: 16px;
+    }
+    h1 { margin: 0 0 8px; }
+    .warn {
+      margin: 0 0 12px;
+      background: #3b2e0a;
+      border: 1px solid #705615;
+      border-radius: 8px;
+      padding: 10px;
+      color: #ffd89d;
+    }
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      color: #9cb0df;
+    }
+    button {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      height: 36px;
+      padding: 0 12px;
+      cursor: pointer;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+      font-size: 14px;
+    }
+    th, td {
+      border-bottom: 1px solid #243354;
+      padding: 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { color: #9cb0df; }
+    .ok { color: #22c55e; }
+    .error { color: #ef4444; }
+    .mono { font-family: Consolas, monospace; white-space: pre-wrap; word-break: break-word; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>{{.Title}}</h1>
+    <p class="warn">{{.Warning}}</p>
+    <div class="row">
+      <span id="timeText">Last update: never</span>
+      <button id="refreshBtn">Refresh now</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Plugin</th>
+          <th>Status</th>
+          <th>Duration</th>
+          <th>Updated</th>
+          <th>Output</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const rows = document.getElementById('rows');
+    const timeText = document.getElementById('timeText');
+    const refreshBtn = document.getElementById('refreshBtn');
+
+    function render(items) {
+      rows.innerHTML = '';
+      for (const item of items) {
+        const tr = document.createElement('tr');
+        const payload = item.error ? item.error : JSON.stringify(item.data, null, 2);
+        tr.innerHTML = `
+          <td>${item.name || ''}</td>
+          <td class="${item.status === 'ok' ? 'ok' : 'error'}">${item.status || 'unknown'}</td>
+          <td>${item.duration || ''}</td>
+          <td>${item.updated_at || ''}</td>
+          <td class="mono">${payload || ''}</td>
+        `;
+        rows.appendChild(tr);
+      }
+    }
+
+    async function refresh() {
+      const res = await fetch('/api/plugins/results');
+      const data = await res.json();
+      render(data.results || []);
+      timeText.textContent = `Last update: ${new Date().toLocaleTimeString()}`;
+    }
+
+    refreshBtn.addEventListener('click', () => refresh().catch(() => {}));
+    refresh().catch(() => {});
+    setInterval(() => refresh().catch(() => {}), 4000);
+  </script>
+</body>
+</html>
