@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DefenseKit API Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a1110;
+      --bg-soft: #121f1d;
+      --card: #102623;
+      --line: #244943;
+      --text: #ddf5ef;
+      --muted: #90b4ac;
+      --accent: #4dffb8;
+      --accent-2: #2ab9ff;
+      --danger: #ff7a7a;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      font-family: "Space Grotesk", sans-serif;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 20% 10%, rgba(77, 255, 184, 0.25), transparent 35%),
+        radial-gradient(circle at 80% 0%, rgba(42, 185, 255, 0.22), transparent 30%),
+        linear-gradient(150deg, #070d0c 0%, #0b1413 40%, #0a1110 100%);
+      display: grid;
+      place-items: start center;
+      padding: 24px;
+    }
+
+    .wrap {
+      width: min(980px, 100%);
+      display: grid;
+      gap: 16px;
+      animation: rise 420ms ease-out;
+    }
+
+    .hero {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: linear-gradient(140deg, rgba(16, 38, 35, 0.95), rgba(8, 24, 22, 0.95));
+      padding: 18px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: clamp(1.3rem, 3vw, 2rem);
+      letter-spacing: 0.02em;
+    }
+
+    .sub {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--card);
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: 1fr;
+    }
+
+    @media (min-width: 760px) {
+      .grid { grid-template-columns: 2fr 1fr 1fr auto; }
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    input, select, button {
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: var(--bg-soft);
+      color: var(--text);
+      padding: 10px 12px;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 0.95rem;
+    }
+
+    button {
+      background: linear-gradient(130deg, var(--accent), #39dba0);
+      color: #072018;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      align-self: end;
+      min-height: 43px;
+    }
+
+    button:hover { filter: brightness(1.03); }
+
+    .status {
+      font-family: "IBM Plex Mono", monospace;
+      color: var(--muted);
+      font-size: 0.85rem;
+      min-height: 20px;
+    }
+
+    .status.ok { color: var(--accent); }
+    .status.err { color: var(--danger); }
+
+    pre {
+      margin: 0;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: #071110;
+      color: #b8f8e2;
+      padding: 12px;
+      min-height: 220px;
+      overflow: auto;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.86rem;
+      line-height: 1.55;
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <h1>DefenseKit Scan Console</h1>
+      <p class="sub">Run quick defensive checks from a browser using <strong>/api/scan</strong> and monitor service health in real time.</p>
+    </section>
+
+    <section class="panel">
+      <div class="grid">
+        <label>
+          Target
+          <input id="target" placeholder="example.com or https://example.com" value="github.com">
+        </label>
+
+        <label>
+          Mode
+          <select id="mode">
+            <option value="http">http</option>
+            <option value="dns">dns</option>
+            <option value="ssl">ssl</option>
+            <option value="latency">latency</option>
+            <option value="all">all</option>
+          </select>
+        </label>
+
+        <label>
+          Timeout (s)
+          <input id="timeout" type="number" min="1" max="15" value="4">
+        </label>
+
+        <button id="scanBtn">Run Scan</button>
+      </div>
+
+      <div id="status" class="status">Checking health...</div>
+      <pre id="out">Waiting for first scan...</pre>
+    </section>
+  </main>
+
+  <script>
+    const statusEl = document.getElementById("status");
+    const outEl = document.getElementById("out");
+    const scanBtn = document.getElementById("scanBtn");
+
+    async function healthCheck() {
+      try {
+        const res = await fetch("/api/health");
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || "health check failed");
+        }
+        statusEl.textContent = `API healthy: ${data.status} at ${data.timestamp}`;
+        statusEl.className = "status ok";
+      } catch (err) {
+        statusEl.textContent = `API unavailable: ${err.message}`;
+        statusEl.className = "status err";
+      }
+    }
+
+    async function runScan() {
+      const target = document.getElementById("target").value.trim();
+      const mode = document.getElementById("mode").value;
+      const timeout = document.getElementById("timeout").value;
+
+      if (!target) {
+        statusEl.textContent = "Target is required";
+        statusEl.className = "status err";
+        return;
+      }
+
+      statusEl.textContent = "Running scan...";
+      statusEl.className = "status";
+      scanBtn.disabled = true;
+
+      try {
+        const url = `/api/scan?target=${encodeURIComponent(target)}&mode=${encodeURIComponent(mode)}&timeout=${encodeURIComponent(timeout)}`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        outEl.textContent = JSON.stringify(data, null, 2);
+
+        if (!res.ok) {
+          throw new Error(data.error || "scan failed");
+        }
+
+        statusEl.textContent = `Scan complete: ${mode}`;
+        statusEl.className = "status ok";
+      } catch (err) {
+        statusEl.textContent = `Scan failed: ${err.message}`;
+        statusEl.className = "status err";
+      } finally {
+        scanBtn.disabled = false;
+      }
+    }
+
+    scanBtn.addEventListener("click", runScan);
+    healthCheck();
+  </script>
+</body>
+</html>
